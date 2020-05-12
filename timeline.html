@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+
+<head>
+	<link rel="stylesheet" href="simpleTimeline.css" />
+	<script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
+	<script src="resize.js"></script>
+	<script src="simpleTimeline.js"></script>
+
+	<style>
+		#timeline {
+			position: relative;
+			margin-top: 350px;
+			max-width: 100%;
+			overflow-x: auto;
+			overflow-y: hidden;
+			border: 1px solid dimgray;
+			box-shadow: 3px 3px 10px 0px rgba(0, 0, 0, 0.75);
+		}
+
+		#timeline .selected {
+			font-weight: bold;
+			box-shadow: 0px 0px 3px 1px gray;
+		}
+
+		#timeline-collapse {
+			top: 355px
+		}
+
+		.styleA {
+			color: darkgreen;
+			background-color: lightgreen;
+		}
+
+		.styleB {
+			color: darkred;
+			background-color: mistyrose;
+		}
+
+		.styleC {
+			color: darkblue;
+			background-color: lightblue;
+		}
+
+		.timeline-unused-phase {
+			background: repeating-linear-gradient(-45deg,
+					rgba(255, 255, 255, 0.85),
+					rgba(255, 255, 255, 0.85) 10px,
+					rgba(235, 235, 235, 0.85) 10px,
+					rgba(235, 235, 235, 0.85) 20px);
+		}
+	</style>
+</head>
+
+<body>
+	<div id="timeline"></div>
+
+	<p>Play with the timeline:</p>
+	<ul>
+		<li>Click the items in the timeline. <span id='clicked-item'></span></li>
+		<li><a href="#" onclick="bind_popup()">Attach popup text to selected item</a></li>
+		<li><a href="#" onclick="add_item()">Add an item</a></li>
+		<li><a href="#" onclick="remove_selected_item()">Remove selected item</a></li>
+	</ul>
+
+	<script>
+		var timeline;
+		$(document).ready(timeline_init);
+
+		function timeline_init() {
+			var options = {
+				phases: [
+					{ start: -440, end: 0, indicatorsEvery: 10, share: 2 },
+				],
+				formatHeader: function (v) {
+					if (v < 0) return -v + ' ';
+					if (v > 0) return v + ' ';
+					return '0';
+				},
+				barHeight: 25,
+				fontSize: 11
+			};
+
+			var data = [
+				[
+					{ "id": ["Musar II."], "start": -320, "end": -297, "className": "styleA" }, { "id": ["Azar XII."], "start": -297, "end": -267, "className": "styleA" }, { "id": ["Carros VI."], "start": -267, "end": -256, "className": "styleA" }, { "id": ["Krisma III."], "start": -256, "end": -222, "className": "styleA" }, { "id": ["Luscha V."], "start": -222, "end": -200, "className": "styleA" }, { "id": ["Krisma IV."], "start": -200, "end": -185, "className": "styleA" }, { "id": ["Azar XIII."], "start": -185, "end": -149, "className": "styleA" }, { "id": ["Jeras IV."], "start": -149, "end": -110, "className": "styleA" }, { "id": ["Krisma V."], "start": -110, "end": -97, "className": "styleA" }, { "id": ["Luscha VI."], "start": -97, "end": -45, "className": "styleA" }, { "id": ["Azar XIV."], "start": -45, "end": -17, "className": "styleA" }, { "id": ["Musar III."], "start": -17, "end": null, "className": "styleA" },
+				],
+				[{ "id": ["Caspar III."], "start": -303, "end": -286, "className": "styleB" }, { "id": ["Damian VII."], "start": -286, "end": -254, "className": "styleB" }, { "id": ["Tristan II."], "start": -254, "end": -231, "className": "styleB" }, { "id": ["Harras II."], "start": -231, "end": -207, "className": "styleB" }, { "id": ["Damian VIII."], "start": -207, "end": -185, "className": "styleB" }, { "id": ["Jeremias X."], "start": -185, "end": -184, "className": "styleB" }, { "id": ["Jeremias XI."], "start": -184, "end": -153, "className": "styleB" }, { "id": ["Tristan III."], "start": -153, "end": -114, "className": "styleB" }, { "id": ["Jeremias XII."], "start": -114, "end": -88, "className": "styleB" }, { "id": ["Damian IX."], "start": -88, "end": -68, "className": "styleB" }, { "id": ["Augustin X."], "start": -68, "end": -39, "className": "styleB" }, { "id": ["Tristan IV."], "start": -39, "end": -13, "className": "styleB" }, { "id": ["Damian X."], "start": -13, "end": -1, "className": "styleB" }, { "id": ["Harras III."], "start": -1, "end": 0, "className": "styleB" }]];
+
+			timeline = $('#timeline');
+			timeline.simpleTimeline(options, data);
+			timeline.on('timeline:barclick', timeline_clicked);
+		}
+
+		function timeline_clicked(e) {
+			var clicked_item = $(e.target);
+
+			var sel = $('.selected');
+			sel.removeClass('selected');
+			$('#clicked-item').empty();
+
+			if (sel.length == 0 || sel.data('id') != clicked_item.data('id')) {
+				clicked_item.addClass('selected');
+				$('#clicked-item').text("You clicked " + clicked_item.data('id'));
+			}
+		}
+
+		function add_item() {
+			var data = timeline.getTimelineData();
+			data.push([
+				{
+					id: 'New One',
+					start: -1978,
+					end: 1978,
+					className: 'styleA'
+				}
+			]);
+			timeline.setTimelineData(data).refreshTimeline();
+		}
+
+		function remove_selected_item() {
+			var sel_item_id = $('.selected').data('id');
+			var data = timeline.getTimelineData();
+			for (var l = 0; l < data.length; l++) {
+				for (var i = 0; i < data[l].length; i++) {
+					if (data[l][i].id == sel_item_id) {
+						data[l].splice(i, 1);
+						if (data[l].length == 0)
+							data.splice(l, 1);
+						timeline.setTimelineData(data).refreshTimeline();
+						return;
+					}
+				}
+			}
+		}
+
+		function bind_popup() {
+			var sel_item_id = $('.selected').data('id');
+			if (typeof sel_item_id == 'undefined') {
+				alert('Ain\'t nothin\' selected, yo!');
+				return;
+			}
+
+			timeline.bindPopup(sel_item_id, '<p><b>Yo it\'s great</b></p><p>Lorem ipsum dolizzle da bomb da bomb, consectetuer adipiscing elit. Nullam sapien velit, boom shackalack volutpizzle, suscipizzle daahng dawg, gravida vel, hizzle. Pellentesque go to hizzle tortor. Sed eros. Izzle at dolizzle dapibus turpis tempizzle gangster. Maurizzle fo shizzle my nizzle nibh et turpizzle. Owned in tortizzle. Pellentesque away rhoncizzle nizzle.</p><p>For sure bizzle massa go to hizzle shizzlin dizzle. Boom shackalack tellivizzle ipsum primis in crunk gangster luctizzle et stuff yo mamma izzle Break yo neck, yall; Nizzle sure. Pellentesque stuff check out this get down get down senectizzle et netizzle bow wow wow malesuada fizzle ac gangster egestas. Funky fresh tempor cool crackalackin. Fizzle erizzle mah nizzle.</p>');
+		}
+	</script>
+</body>
+
+</html>
